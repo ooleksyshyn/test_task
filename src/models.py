@@ -33,7 +33,8 @@ class Post(db.Model):
     author_id = db.Column(db.Integer, db.ForeignKey("user.id"))
     text = db.Column(db.Text, nullable=False)
     uuid = db.Column(db.String(255), unique=True)
-    datetime = db.Column(db.DateTime, default=datetime.datetime.now())
+    date = db.Column(db.Date, default=datetime.date.today())
+    time = db.Column(db.Time, default=datetime.datetime.now().time())
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -48,7 +49,8 @@ class Post(db.Model):
             "author_id": self.author_id,
             "text": self.text,
             "uuid": self.uuid,
-            "datetime": str(self.datetime)
+            "date": str(self.date),
+            "time": str(self.time)
         }
 
 
@@ -56,19 +58,22 @@ class Like(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
     post_id = db.Column(db.Integer, db.ForeignKey("post.id"))
-    datetime = db.Column(db.DateTime, default=datetime.datetime.now())
+    date = db.Column(db.Date, default=datetime.date.today())
+    time = db.Column(db.Time, default=datetime.datetime.now().time())
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
     def __repr__(self):
-        return f"<Like: id={self.id}, user_id={self.user_id}, post_id={self.post_id}, date={self.date}>"
+        return f"<Like: id={self.id}, user_id={self.user_id}, post_id={self.post_id}, " \
+               f"date={str(self.date)}, time={str(self.time)}>"
 
     def json(self):
         return {
             "user_id": self.user_id,
             "post_id": self.post_id,
-            "date": str(self.datetime)
+            "date": str(self.date),
+            "time": str(self.time)
         }
 
 
@@ -77,19 +82,55 @@ class ActivityLog(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
     post_id = db.Column(db.Integer, db.ForeignKey("post.id"), nullable=True)
     action = db.Column(db.String(255))
-    datetime = db.Column(db.DateTime, default=datetime.datetime.now())
+    date = db.Column(db.Date, default=datetime.date.today())
+    time = db.Column(db.Time, default=datetime.datetime.now().time())
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
     def __repr__(self):
         return f"<Activity: id={self.id}, user={self.user_id}, post={self.post_id}, " \
-               f"action={self.action}, time={self.datetime}>"
+               f"action={self.action}, date={self.date}, time={self.time}>"
 
     def json(self):
         return {
             "user_id": self.user_id,
             "post_id": self.post_id,
             "action": self.action,
-            "time": str(self.datetime)
+            "date": str(self.date),
+            "time": str(self.time)
         }
+
+
+def log_activity(action, **kwargs):
+    """
+    Function that adds actions to database table activity_log
+
+    :param action: description of an activity
+    :param kwargs: user_id, post_id if action is done by some user, and/or on some post
+    """
+
+    new_activity = ActivityLog(action=action, date=datetime.date.today(), time=datetime.datetime.now().time(), **kwargs)
+
+    db.session.add(new_activity)
+    db.session.commit()
+
+
+def from_datetime(datetime_string):
+    """
+    Turns a string of datetime to date object
+    """
+
+    date = datetime.datetime.strptime(datetime_string, "%Y-%m-%d %H:%M:%S").date()
+
+    return date
+
+
+def from_date(date_string):
+    """
+    Turns a string of date to date object
+    """
+
+    date = datetime.datetime.strptime(date_string, "%Y-%m-%d").date()
+
+    return date
