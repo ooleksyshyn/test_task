@@ -1,0 +1,30 @@
+language: python
+python:
+  - "3.6"
+  - "3.7"
+
+services:
+  - mysql
+
+# install requirements
+install:
+  - pip3 install -r requirements.txt
+
+before_install:
+  - mysql -e 'CREATE DATABASE `testdb`;'
+  - mysql -e 'CREATE USER oleksii@localhost IDENTIFIED BY "1";'
+  - mysql -e 'GRANT ALL PRIVILEGES ON testdb.* TO oleksii@localhost;'
+  - mysql testdb < db/main_db_bootstrap.sql
+
+before_script:
+  - python -m src & APP_PID=$!
+
+
+script:
+  - python -m unittest discover tests/
+
+notifications:
+  email: false
+
+after_script:
+  - KILL $APP_PID
