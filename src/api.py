@@ -1,4 +1,4 @@
-from src.models import User, Like, Post, ActivityLog, log_activity, from_datetime, from_date
+from src.models import User, Like, Post, ActivityLog, log_activity, from_date
 from src.app import api, db, app
 import src.authentication as auth
 
@@ -34,6 +34,14 @@ class Users(Resource):
 
         args = request.get_json()
 
+        if not args:
+            # input data is invalid
+
+            log_activity(f"user creation with a failure: no arguments passed")
+            return {
+                       "error": f"no arguments passed"
+                   }, 404
+
         new_user = User(**args)
 
         existing_user = User.query.filter(User.username == args['username']).all()
@@ -53,11 +61,9 @@ class Users(Resource):
         log_activity(f"user created successfully: {args['username']}", user_id=new_user.id)
 
         token = jwt.encode({
-            "user": new_user.username,
+            "username": new_user.username,
             "exp": datetime.datetime.now() + datetime.timedelta(minutes=30)
-            },
-            app.config["SECRET_KEY"]
-        )
+        }, app.config['SECRET_KEY'])
 
         return {"token": token.decode("utf-8")}, 200
 
