@@ -10,8 +10,16 @@ import datetime
 def token_required(func):
     @wraps(func)
     def authenticate(self, *args, **kwargs):
+        """
+        Decorator that is used to check if request contains a valid jwt token
+
+
+        :param self: decorates methods, so it should positional argument self
+        :param args, kwargs: other arguments, passed to decorated function
+        :return: calls a decorated function with a 'user' passed as an argument, returns its result
+        """
+
         token = request.headers.get("X-Api-Key", "")
-        print(f"token: {token}, {request.headers}")
 
         if not token:
             return {"token required": "invalid token"}, 401, {"WWW-Authenticate": 'Basic realm="Authentication required"'}
@@ -32,6 +40,12 @@ def token_required(func):
 
 class Login(Resource):
     def get(self):
+        """
+        Allows user to login and receive its jwt token
+
+        :return: json with token for this user
+        """
+
         auth = request.authorization
         user = User.query.filter(User.username == auth.get("username", "")).first()
 
@@ -50,5 +64,3 @@ class Login(Resource):
 
 
 api.add_resource(Login, "/api/login")
-
-# curl -H "Content-Type: application/json" -H "X-Api-Key:eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6Im9vbGVrc3lzaHluIiwiZXhwIjoxNTg4ODgxNzkxfQ.jvw8qwzblv5EJ8-zN96VyomBR7AV78NCewtYlNVXEu0" -d '{"uuid": "7b69a31a-0d4a-49d1-9e47-3c9ec8c894f0"}' http://127.0.0.1:5000/api/like

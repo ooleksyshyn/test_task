@@ -30,6 +30,11 @@ class Users(Resource):
         """
         :return: a token of a new created user, or an error, if a user with given username already exists
 
+        Request example (should be a single line):
+            curl --header "Content-Type: application/json"
+            -d '{"name":"Dima", "surname":"Antoniuk", "username": "sh", "password": "sh123"}'
+            --request POST http://127.0.0.1:5000/api/users
+
         """
 
         args = request.get_json()
@@ -70,6 +75,12 @@ class Users(Resource):
 
 class Posts(Resource):
     def get(self):
+        """
+        :return: list of jsons of all posts
+
+        example: curl http://127.0.0.1:5000/api/posts
+        """
+
         posts = Post.query.all()
 
         posts_list = [post.json() for post in posts]
@@ -80,7 +91,25 @@ class Posts(Resource):
 
     @auth.token_required
     def post(self, user):
+        """
+        API for creating a new post
+
+        :param user: authenticated user, returned by auth.token_required function
+        :return: json of a new created post
+
+        example:
+        curl -H "Content-Type: application/json" -H "X-Api-Key: <USER_TOKEN>"
+        -d '{"text": "user has created a new post!!!"}' http://127.0.0.1:5000/api/posts
+
+        where <USER_TOKEN> must be replaced by an authenticated user's token
+        """
+
         args = request.get_json()
+
+        if not args:
+            log_activity("tried to add post without text", user_id=user.id)
+
+            return {"error": "no post text provided"}
 
         new_post = Post(author_id=user.id, text=args["text"])
 
@@ -95,7 +124,27 @@ class Posts(Resource):
 class Likes(Resource):
     @auth.token_required
     def post(self, user):
+        """
+        API for a user to like/unlike some post. If post was already liked, this like will be deleted,
+        post will be unliked (same as in Instagram). If user didn't like this post previously, like will be added
+
+        :param user: authenticated user, who wants to like some post
+        :return: data about new like or message that like was deleted
+
+        example (should be a single line):
+        curl -H "Content-Type: application/json" -H "X-Api-Key: <USER_TOKEN>"
+        -d '{"uuid": "<POST_UUID>"}' http://127.0.0.1:5000/api/like
+
+        Where <USER_TOKEN> must be replaced by user's jwt token, <POST_UUID> by uuid of a post,
+        the user wants to like/unlike
+        """
+
         args = request.get_json()
+
+        if not args:
+            log_activity("tried to like post without uuid", user_id=user.id)
+
+            return {"error": "no post uuid provided"}
 
         post_uuid = args["uuid"]
 
@@ -127,7 +176,23 @@ class Likes(Resource):
 
 class UserStatistics(Resource):
     def get(self):
-        username = request.get_json()["username"]
+        """
+        API for tracking user's activities: likes/unlikes, posts creation, logins and so on
+
+        :return: json of all activities of a user
+
+        example:
+        curl -H "Content-Type: application/json" -d '{"username": "ooleksyshyn"}' -X GET http://127.0.0.1:5000/api/analytics/user
+
+
+        """
+
+        args = request.get_json()
+
+        if not args:
+            return {"error": "no username provided"}, 400
+
+        username = args["username"]
 
         user = User.query.filter(User.username == username).first()
 
@@ -141,8 +206,21 @@ class UserStatistics(Resource):
 
 class LikeStatistics(Resource):
     def get(self):
+        """
+        API for statistics about likes on some post during some period of time, accumulated by date
+
+        :return: json with data about likes on post during the given period of time (accumulated by date)
+
+        example (should be a single line):
+         curl -H "Content-Type: application/json"
+         -d '{"uuid": "some uuid", "start_date":"2020-05-08", "end_date":"2020-05-09"}'
+         -X GET http://127.0.0.1:5000/api/analytics/likes
+        """
 
         args = request.get_json()
+
+        if not args:
+            return {"error": "no post uuid provided"}, 400
 
         post_uuid = args["uuid"]
         start_date = from_date(args.get("start_date", str(datetime.date.today())))

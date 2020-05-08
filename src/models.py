@@ -55,6 +55,10 @@ class Post(db.Model):
 
 
 class Like(db.Model):
+    """
+    Describes a like given by some user to some post
+    """
+
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"))
     post_id = db.Column(db.Integer, db.ForeignKey("post.id"))
@@ -78,6 +82,12 @@ class Like(db.Model):
 
 
 class ActivityLog(db.Model):
+    """
+    Describes an activity by (optional) user (and/or) on some (optional) post,
+    or just a message about what was done
+
+    """
+
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
     post_id = db.Column(db.Integer, db.ForeignKey("post.id"), nullable=True)
