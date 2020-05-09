@@ -1,10 +1,15 @@
 import unittest
-import requests
+
+
+from src.api import app, db
 
 
 class UsersApiTest(unittest.TestCase):
+    def setUp(self):
+        self.app = app.test_client()
+
     def test_get(self):
-        r = requests.get("http://localhost:5000/api/users")
+        r = self.app.get("api/users")
 
         # print(r.json())
         self.assertEqual(r.status_code, 200)
