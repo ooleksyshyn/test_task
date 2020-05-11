@@ -49,15 +49,16 @@ class Users(Resource):
 
         new_user = User(**args)
 
-        existing_user = User.query.filter(User.username == args['username']).all()
+        existing_user = User.query.filter(User.username == args.get('username')).all()
 
-        if existing_user or (not args['name']) or (not args['surname']) or (not args['password']):
+        if existing_user or (not args.get('name')) or (not args.get('surname')) or (not args.get('password')):
             # input data is invalid
 
-            log_activity(f"user creation with a failure: {args['username']}")
+            log_activity(f"user creation with a failure: {args.get('username')}")
             return {
-                       "error": f"cant create user with name {args['name']}, "
-                                f"surname {args['surname']}, username {args['username']}, password {args['password']}"
+                       "error": f"cant create user with name {args.get('name')}, "
+                                f"surname {args.get('surname')}, username {args.get('username')}, "
+                                f"password {args.get('password')}"
                    }, 404
 
         db.session.add(new_user)
