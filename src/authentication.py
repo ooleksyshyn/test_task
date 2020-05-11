@@ -46,11 +46,15 @@ class Login(Resource):
         :return: json with token for this user
         """
 
-        auth = request.authorization
-        user = User.query.filter(User.username == auth.get("username", "")).first()
+        data = request.get_json()
 
-        if user is None or (user.password != auth.get("password", "")):
-            log_activity(f"user logined unsuccessfully: {auth.get('username', '')}")
+        if not data:
+            return {"error": 'No authorization data passed'}, 401
+
+        user = User.query.filter(User.username == data.get("username")).first()
+
+        if user is None or (user.password != data.get("password")):
+            log_activity(f"user logined unsuccessfully: {data.get('username', '')}")
             return {"WWW-Authenticate": 'Basic realm="Authentication required"'}, 401
 
         token = jwt.encode({

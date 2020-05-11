@@ -1,3 +1,7 @@
+## Travis CI status (branch: master)
+
+![Travis (.org)](https://img.shields.io/travis/ooleksyshyn/test_task?style=for-the-badge)
+
 ## Project requirements
  - mysql
  - python >= 3.6

@@ -1,13 +1,12 @@
 import unittest
 import jwt
-import datetime
 import json
 
 from src.api import app, db
 from src.models import User, ActivityLog, Post, Like
 
 
-class UsersApiTest(unittest.TestCase):
+class UsersApiTestCase(unittest.TestCase):
     def setUp(self):
         self.app = app.test_client()
 
@@ -132,3 +131,78 @@ class UsersApiTest(unittest.TestCase):
                          'username username228, password other_password'
             }
         )
+
+
+class LoginTestCase(unittest.TestCase):
+    def setUp(self):
+        self.app = app.test_client()
+
+        user1 = User(name="Name", surname="Surname", password="123", username="user")
+        user2 = User(name="Ім'я", surname="Прізвище", password="123", username="користувач")
+
+        db.session.add(user1)
+        db.session.add(user2)
+
+        db.session.commit()
+
+        self.users_data = [(user1.username, user1.password), (user2.username, user2.password)]
+
+    def tearDown(self):
+        db.session.query(ActivityLog).delete()
+        db.session.query(Like).delete()
+        db.session.query(Post).delete()
+        db.session.query(User).delete()
+
+        db.session.commit()
+
+    def test_login(self):
+        # login for first user
+
+        username, password = self.users_data[0]
+
+        data = {"username": username, "password": password}
+
+        r = self.app.get("/api/login", content_type="application/json", data=json.dumps(data))
+
+        self.assertEqual(r.status_code, 200)
+
+        # check if returned token corresponds to this user
+
+        added_username = jwt.decode(r.json.get("token"), app.config["SECRET_KEY"]).get("username")
+
+        self.assertEqual(username, added_username)
+
+    def test_login_incorrect_data(self):
+
+        username, password = self.users_data[0]
+
+        # login with incorrect password for existing user
+
+        data = {"username": username, "password": "wrong password"}
+
+        r = self.app.get("/api/login", content_type="application/json", data=json.dumps(data))
+
+        self.assertEqual(r.status_code, 401)
+
+        # login with incorrect username
+
+        data["username"] = "some_username"
+        data["password"] = password
+
+        r = self.app.get("/api/login", content_type="application/json", data=json.dumps(data))
+
+        self.assertEqual(r.status_code, 401)
+
+        # login without data
+
+        r = self.app.get("/api/login")
+
+        self.assertEqual(r.status_code, 401)
+
+
+class PostsApiTestCase(unittest.TestCase):
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
