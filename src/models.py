@@ -112,6 +112,15 @@ class ActivityLog(db.Model):
         }
 
 
+def clear_db():
+    db.session.query(ActivityLog).delete()
+    db.session.query(Like).delete()
+    db.session.query(Post).delete()
+    db.session.query(User).delete()
+
+    db.session.commit()
+
+
 def log_activity(action, **kwargs):
     """
     Function that adds actions to database table activity_log

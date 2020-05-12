@@ -28,6 +28,8 @@ def token_required(func):
             username = jwt.decode(token, app.config['SECRET_KEY'])['username']
         except (KeyError, jwt.ExpiredSignatureError):
             return {"token required": "token expired"}, 401, {"WWW-Authenticate": 'Basic realm="Authentication required"'}
+        except:
+            return {"token required": "wrong token"}, 401, {"WWW-Authenticate": 'Basic realm="Authentication required"'}
 
         user = User.query.filter(User.username == username).first()
 

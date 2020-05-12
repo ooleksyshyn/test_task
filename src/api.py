@@ -110,7 +110,7 @@ class Posts(Resource):
         if not args:
             log_activity("tried to add post without text", user_id=user.id)
 
-            return {"error": "no post text provided"}
+            return {"error": "no post text provided"}, 401
 
         new_post = Post(author_id=user.id, text=args["text"])
 
@@ -119,7 +119,7 @@ class Posts(Resource):
 
         log_activity("new post added", user_id=user.id, post_id=new_post.id)
 
-        return new_post.json()
+        return new_post.json(), 201
 
 
 class Likes(Resource):
@@ -145,7 +145,7 @@ class Likes(Resource):
         if not args:
             log_activity("tried to like post without uuid", user_id=user.id)
 
-            return {"error": "no post uuid provided"}
+            return {"error": "no post uuid provided"}, 401
 
         post_uuid = args["uuid"]
 
@@ -164,7 +164,7 @@ class Likes(Resource):
 
             log_activity("unliked post", user_id=user.id, post_id=post.id)
 
-            return {"message": "post was successfully unliked"}, 200
+            return {"message": "post was successfully unliked"}, 201
         else:
             like = Like(user_id=user.id, post_id=post.id)
             db.session.add(like)
@@ -172,7 +172,7 @@ class Likes(Resource):
 
             log_activity("liked post", user_id=user.id, post_id=post.id)
 
-            return like.json()
+            return like.json(), 201
 
 
 class UserStatistics(Resource):
@@ -202,7 +202,7 @@ class UserStatistics(Resource):
 
         actions = ActivityLog.query.filter(ActivityLog.user_id == user.id).all()
 
-        return [action.json() for action in actions]
+        return [action.json() for action in actions], 200
 
 
 class LikeStatistics(Resource):
@@ -230,7 +230,7 @@ class LikeStatistics(Resource):
         post = Post.query.filter(Post.uuid == post_uuid).first()
 
         if not post:
-            return {"error": f"no such post {post_uuid}"}
+            return {"error": f"no such post {post_uuid}"}, 404
 
         likes = db.session.query(Like.date, func.count(Like.date)).filter(
             Like.post_id == post.id,

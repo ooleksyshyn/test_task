@@ -3,7 +3,7 @@ import jwt
 import json
 
 from src.api import app, db
-from src.models import User, ActivityLog, Post, Like
+from src.models import User, Like, ActivityLog, Post, clear_db
 
 
 class UsersApiTestCase(unittest.TestCase):
@@ -25,12 +25,7 @@ class UsersApiTestCase(unittest.TestCase):
         self.users_json = [user1.json(), user2.json(), user3.json(), user4.json()]
 
     def tearDown(self):
-        db.session.query(ActivityLog).delete()
-        db.session.query(Like).delete()
-        db.session.query(Post).delete()
-        db.session.query(User).delete()
-
-        db.session.commit()
+        clear_db()
 
     def test_get(self):
         r = self.app.get("/api/users")
@@ -148,12 +143,7 @@ class LoginTestCase(unittest.TestCase):
         self.users_data = [(user1.username, user1.password), (user2.username, user2.password)]
 
     def tearDown(self):
-        db.session.query(ActivityLog).delete()
-        db.session.query(Like).delete()
-        db.session.query(Post).delete()
-        db.session.query(User).delete()
-
-        db.session.commit()
+        clear_db()
 
     def test_login(self):
         # login for first user
@@ -198,11 +188,3 @@ class LoginTestCase(unittest.TestCase):
         r = self.app.get("/api/login")
 
         self.assertEqual(r.status_code, 401)
-
-
-class PostsApiTestCase(unittest.TestCase):
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
